@@ -78,22 +78,11 @@ function MapController({ setSelectedParcel }) {
   return null;
 }
 
-const Map = () => {
+// ✅ Updated: Props passed from page.jsx
+const Map = ({ savedParcels, setSavedParcels, onFinish }) => {
   const [selectedParcel, setSelectedParcel] = useState(null);
-  const [savedParcels, setSavedParcels] = useState([]);
 
-  // ✅ Load from localStorage
-  useEffect(() => {
-    const stored = localStorage.getItem("parcels");
-    if (stored) setSavedParcels(JSON.parse(stored));
-  }, []);
-
-  // ✅ Save to localStorage
-  useEffect(() => {
-    localStorage.setItem("parcels", JSON.stringify(savedParcels));
-  }, [savedParcels]);
-
-  // ✅ Add parcel
+  // ✅ Add parcel to the shared list
   const addParcelToList = () => {
     if (!selectedParcel) return;
 
@@ -134,10 +123,9 @@ const Map = () => {
               </button>
             </div>
 
-            {/* ✅ ADD BUTTON */}
             <button
               onClick={addParcelToList}
-              className="mb-4 w-full bg-green-600 cursor-pointer hover:bg-green-700 text-white text-sm font-bold py-2 px-4 rounded shadow"
+              className="mb-4 w-full bg-green-600 cursor-pointer hover:bg-green-700 text-white text-sm font-bold py-2 px-4 rounded shadow transition-colors"
             >
               Zur Liste hinzufügen
             </button>
@@ -197,36 +185,66 @@ const Map = () => {
         </MapContainer>
       </div>
 
-      {/* 📋 TABLE */}
-      <div className="mt-8">
-        <h2 className="text-xl font-bold mb-4 text-center">Meine Liste</h2>
+      {/* 📋 TABLE & FINISH ACTION */}
+      <div className="mt-8 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+          <h2 className="text-xl font-bold text-slate-800">
+            Ausgewählte Flurstücke
+          </h2>
+
+          {/* ✅ FINISH BUTTON: Triggered once parcels are selected */}
+          {savedParcels.length > 0 && (
+            <button
+              onClick={onFinish}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-8 rounded-lg shadow-md transition-all active:scale-95"
+            >
+              Auswahl bestätigen & Weiter →
+            </button>
+          )}
+        </div>
 
         {savedParcels.length === 0 ? (
-          <p className="text-center text-gray-500">
-            Keine gespeicherten Flurstücke.
+          <p className="text-center text-gray-500 py-10 border-2 border-dashed rounded-lg border-slate-200">
+            Klicken Sie auf die Karte, um Flurstücke für Ihren Anwendungsplan
+            auszuwählen.
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full border border-slate-200 text-sm">
-              <thead className="">
+              <thead className="bg-slate-50">
                 <tr>
-                  <th className="p-2 border">Kennzeichen</th>
-                  <th className="p-2 border">Flurstück</th>
-                  <th className="p-2 border">Gemarkung</th>
-                  <th className="p-2 border">Gemeinde</th>
-                  <th className="p-2 border">Fläche</th>
+                  <th className="p-3 border-b text-left">Kennzeichen</th>
+                  <th className="p-3 border-b text-left">Flurstück</th>
+                  <th className="p-3 border-b text-left">Gemarkung</th>
+                  <th className="p-3 border-b text-left">Gemeinde</th>
+                  <th className="p-3 border-b text-right">Fläche</th>
+                  <th className="p-3 border-b text-center">Aktion</th>
                 </tr>
               </thead>
               <tbody>
                 {savedParcels.map((p, i) => (
-                  <tr key={i} className="text-center">
-                    <td className="p-2 border font-mono">
+                  <tr key={i} className="hover:bg-slate-50 transition-colors">
+                    <td className="p-3 border-b font-mono">
                       {p.extracted.kennzeichen}
                     </td>
-                    <td className="p-2 border">{p.extracted.nummer}</td>
-                    <td className="p-2 border">{p.extracted.gemarkung}</td>
-                    <td className="p-2 border">{p.extracted.gemeinde}</td>
-                    <td className="p-2 border">{p.extracted.areaM2} m²</td>
+                    <td className="p-3 border-b">{p.extracted.nummer}</td>
+                    <td className="p-3 border-b">{p.extracted.gemarkung}</td>
+                    <td className="p-3 border-b">{p.extracted.gemeinde}</td>
+                    <td className="p-3 border-b text-right">
+                      {p.extracted.areaM2} m²
+                    </td>
+                    <td className="p-3 border-b text-center">
+                      <button
+                        onClick={() =>
+                          setSavedParcels(
+                            savedParcels.filter((_, idx) => idx !== i),
+                          )
+                        }
+                        className="text-red-500 hover:text-red-700 text-xs font-semibold"
+                      >
+                        Entfernen
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
